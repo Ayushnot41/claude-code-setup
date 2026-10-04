@@ -1,0 +1,13 @@
+# Code review graph
+.code-review-graph/
+
+# Git sub-repos / dependencies
+MoneyPrinterTurbo/
+node_modules/
+__pycache__/
+
+# Secrets and keys
+.env
+*.env
+*.key
+*.pem
