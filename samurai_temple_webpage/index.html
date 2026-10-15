@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KAGE NO BUSHIDO — 4K 3D Samurai Temple Experience</title>
+  <!-- Google Fonts: Cinzel Decorative, Noto Serif JP, Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Noto+Serif+JP:wght@400;700;900&family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <!-- Three.js from CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <style>
+    :root {
+      --bg-dark: #07090e;
+      --vermilion: #e63946;
+      --vermilion-glow: rgba(230, 57, 70, 0.4);
+      --gold: #d4af37;
+      --gold-light: #f3e5ab;
+      --sakura: #ffb7c5;
+      --text-muted: #8e9aaf;
+      --card-bg: rgba(14, 18, 28, 0.75);
+      --border-gold: rgba(212, 175, 55, 0.25);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: #f1faee;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      overflow-x: hidden;
+      line-height: 1.6;
+      user-select: none;
+    }
+
+    /* WebGL Canvas */
+    #webgl-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+      pointer-events: auto;
+    }
+
+    /* Ambient UI Overlay */
+    .ui-layer {
+      position: relative;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .interactive {
+      pointer-events: auto;
+    }
+
+    /* Navigation */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      padding: 24px 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(180deg, rgba(7,9,14,0.9) 0%, rgba(7,9,14,0) 100%);
+      z-index: 100;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand-crest {
+      width: 44px;
+      height: 44px;
+      border: 2px solid var(--gold);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Noto Serif JP', serif;
+      font-weight: 900;
+      color: var(--gold);
+      box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+      background: rgba(0,0,0,0.4);
+    }
+
+    .brand-title {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: 1.25rem;
+      letter-spacing: 3px;
+      color: #fff;
+      text-transform: uppercase;
+    }
+
+    .brand-title span {
+      color: var(--vermilion);
+    }
+
+    nav {
+      display: flex;
+      gap: 32px;
+      align-items: center;
+    }
+
+    nav a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    nav a:hover, nav a.active {
+      color: var(--gold);
+      text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .btn-sound {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border-gold);
+      color: var(--gold);
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s;
+    }
+
+    .btn-sound:hover {
+      background: rgba(212, 175, 55, 0.15);
+      border-color: var(--gold);
+    }
+
+    .btn-cta {
+      background: linear-gradient(135deg, var(--vermilion) 0%, #a81c27 100%);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 10px 24px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 20px var(--vermilion-glow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 28px rgba(230, 57, 70, 0.6);
+    }
+
+    /* Hero Section */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 0 80px;
+      max-width: 900px;
+    }
+
+    .kanji-watermark {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 6rem;
+      font-weight: 900;
+      color: rgba(255, 255, 255, 0.05);
+      letter-spacing: 12px;
+      position: absolute;
+      top: 18%;
+      left: 70px;
+      pointer-events: none;
+      line-height: 1;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(212, 175, 55, 0.1);
+      border: 1px solid var(--border-gold);
+      padding: 6px 16px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      letter-spacing: 2px;
+      color: var(--gold);
+      text-transform: uppercase;
+      width: fit-content;
+      margin-bottom: 24px;
+      backdrop-filter: blur(8px);
+    }
+
+    .hero-title {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: 4rem;
+      font-weight: 900;
+      line-height: 1.1;
+      margin-bottom: 20px;
+      text-shadow: 0 10px 30px rgba(0,0,0,0.8);
+      background: linear-gradient(180deg, #ffffff 40%, #c4cbd8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-subtitle {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      max-width: 580px;
+      margin-bottom: 36px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.9);
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .btn-secondary {
+      background: rgba(14, 18, 28, 0.8);
+      border: 1px solid var(--border-gold);
+      color: #fff;
+      padding: 10px 24px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.3s;
+      backdrop-filter: blur(8px);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(212, 175, 55, 0.2);
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+
+    /* Camera Preset Controls in 3D View */
+    .camera-presets {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 12px;
+      background: rgba(10, 14, 22, 0.85);
+      border: 1px solid var(--border-gold);
+      padding: 8px 16px;
+      border-radius: 30px;
+      backdrop-filter: blur(12px);
+      z-index: 100;
+    }
+
+    .preset-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .preset-btn:hover, .preset-btn.active {
+      background: var(--vermilion);
+      color: #fff;
+      box-shadow: 0 0 15px var(--vermilion-glow);
+    }
+
+    /* Live MCP Status Banner */
+    .mcp-status-pill {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      background: rgba(7, 9, 14, 0.9);
+      border: 1px solid rgba(46, 204, 113, 0.4);
+      padding: 10px 18px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+      z-index: 100;
+    }
+
+    .pulse-dot {
+      width: 10px;
+      height: 10px;
+      background: #2ecc71;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #2ecc71;
+      animation: pulse 1.8s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.9); opacity: 0.7; }
+      50% { transform: scale(1.3); opacity: 1; }
+      100% { transform: scale(0.9); opacity: 0.7; }
+    }
+
+    .mcp-text {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #e0e0e0;
+      letter-spacing: 1px;
+    }
+
+    .mcp-sub {
+      font-size: 0.65rem;
+      color: #2ecc71;
+    }
+
+    /* Feature Sections */
+    .section-container {
+      padding: 120px 80px;
+      background: linear-gradient(180deg, rgba(7,9,14,0.4) 0%, rgba(7,9,14,0.95) 100%);
+      backdrop-filter: blur(10px);
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 64px;
+    }
+
+    .section-badge {
+      color: var(--vermilion);
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: 2.5rem;
+      color: #fff;
+      margin-bottom: 16px;
+    }
+
+    .section-desc {
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0 auto;
+      font-size: 1rem;
+    }
+
+    /* 4K Render Comparison Lightbox / Modal */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 32px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .gallery-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-gold);
+      border-radius: 8px;
+      overflow: hidden;
+      transition: all 0.4s ease;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .gallery-card:hover {
+      transform: translateY(-8px);
+      border-color: var(--gold);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.8), 0 0 20px rgba(212, 175, 55, 0.2);
+    }
+
+    .card-img-wrapper {
+      position: relative;
+      height: 240px;
+      overflow: hidden;
+      background: #000;
+    }
+
+    .card-img-wrapper img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.6s ease;
+    }
+
+    .gallery-card:hover .card-img-wrapper img {
+      transform: scale(1.08);
+    }
+
+    .card-tag {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      background: rgba(0,0,0,0.7);
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      font-size: 0.65rem;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      backdrop-filter: blur(4px);
+    }
+
+    .card-content {
+      padding: 24px;
+    }
+
+    .card-title {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: 1.25rem;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+
+    .card-desc {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    /* Modal for 4K Inspection */
+    #render-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.92);
+      backdrop-filter: blur(16px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      padding: 40px;
+    }
+
+    #render-modal.open {
+      display: flex;
+    }
+
+    .modal-frame {
+      max-width: 90vw;
+      max-height: 80vh;
+      border: 2px solid var(--gold);
+      box-shadow: 0 0 50px rgba(212, 175, 55, 0.3);
+      position: relative;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .modal-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: -40px;
+      right: 0;
+      color: #fff;
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .modal-close:hover {
+      color: var(--vermilion);
+    }
+
+    .modal-caption {
+      margin-top: 20px;
+      color: var(--gold);
+      font-family: 'Cinzel Decorative', serif;
+      font-size: 1.1rem;
+      letter-spacing: 2px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Three.js 3D Canvas -->
+  <div id="webgl-container"></div>
+
+  <!-- UI Overlay -->
+  <div class="ui-layer">
+    
+    <!-- Top Nav -->
+    <header class="interactive">
+      <div class="brand">
+        <div class="brand-crest">侍</div>
+        <div class="brand-title">Kage no <span>Bushido</span></div>
+      </div>
+      <nav>
+        <a href="#hero" class="active">Sanctuary</a>
+        <a href="#lore">Chronicles</a>
+        <a href="#gallery">4K Showcase</a>
+        <a href="#shrine">Sacred Grounds</a>
+      </nav>
+      <div class="header-actions">
+        <button class="btn-sound" id="btn-audio-toggle">
+          <span>🔊</span> <span id="audio-label">Sound FX</span>
+        </button>
+        <button class="btn-cta" id="btn-open-4k">Inspect 4K</button>
+      </div>
+    </header>
+
+    <!-- Hero Content -->
+    <section class="hero" id="hero">
+      <div class="kanji-watermark">影侍寺院</div>
+      <div class="hero-badge interactive">
+        <span>⛩️</span> Feudal Japan 1274 · AAA Cinematic Experience
+      </div>
+      <h1 class="hero-title">SANCTUARY OF THE CRIMSON BLADE</h1>
+      <p class="hero-subtitle">
+        A masterless samurai seeks retribution within the secluded mountain shrine of Kyoto. Live procedural 3D temple constructed through the Antigravity Blender MCP connection.
+      </p>
+      <div class="hero-actions interactive">
+        <button class="btn-cta" id="btn-tour">Begin Cinematic Flight</button>
+        <button class="btn-secondary" id="btn-inspect-temple">Inspect Temple Architecture</button>
+      </div>
+    </section>
+
+    <!-- Camera Presets Tool bar -->
+    <div class="camera-presets interactive">
+      <button class="preset-btn active" data-preset="entrance">Torii Gate Entrance</button>
+      <button class="preset-btn" data-preset="veranda">Engawa Veranda</button>
+      <button class="preset-btn" data-preset="aerial">High Pagoda View</button>
+      <button class="preset-btn" data-preset="orbit">Free 3D Orbit</button>
+    </div>
+
+    <!-- Live Blender MCP Bridge Status Pill -->
+    <div class="mcp-status-pill interactive">
+      <div class="pulse-dot"></div>
+      <div>
+        <div class="mcp-text">BLENDER MCP 5.2.2 LTS</div>
+        <div class="mcp-sub">Port 9876 Active · 157 Objects Built</div>
+      </div>
+    </div>
+
+    <!-- 4K Showcase Section -->
+    <section class="section-container" id="gallery">
+      <div class="section-header">
+        <div class="section-badge">Hyper-Realistic Fidelity</div>
+        <h2 class="section-title">CHRONICLES OF KYOTO SHRINE</h2>
+        <p class="section-desc">
+          Crafted procedurally in Blender via Model Context Protocol and rendered with AgX High-Contrast colorimetry and micro-surface PBR materials.
+        </p>
+      </div>
+
+      <div class="gallery-grid interactive">
+        <!-- Card 1: Actual Blender 4K Render -->
+        <div class="gallery-card" id="card-blender-render">
+          <div class="card-img-wrapper">
+            <span class="card-tag">Blender 4K Render</span>
+            <img src="samurai_temple_render.png" alt="Blender 4K Temple Snapshot">
+          </div>
+          <div class="card-content">
+            <h3 class="card-title">Sanctuary at Twilight</h3>
+            <p class="card-desc">
+              High-resolution 2560x1440 render generated directly in live Blender via Blender MCP. Click to inspect full-screen sharpness.
+            </p>
+          </div>
+        </div>
+
+        <!-- Card 2: Architectural Details -->
+        <div class="gallery-card" onclick="setCameraPreset('veranda')">
+          <div class="card-img-wrapper">
+            <span class="card-tag">Architecture</span>
+            <img src="samurai_temple_render.png" alt="Irimoya Sweeping Roof" style="object-position: top center;">
+          </div>
+          <div class="card-content">
+            <h3 class="card-title">Irimoya Curved Eaves</h3>
+            <p class="card-desc">
+              Multi-tiered flared roof tiles with upward curved sori corners, gilded Onigawara demon finials, and Kashiranuki timber beams.
+            </p>
+          </div>
+        </div>
+
+        <!-- Card 3: Sacred Grounds -->
+        <div class="gallery-card" onclick="setCameraPreset('entrance')">
+          <div class="card-img-wrapper">
+            <span class="card-tag">Sacred Relics</span>
+            <img src="samurai_temple_render.png" alt="Torii & Lanterns" style="object-position: bottom center;">
+          </div>
+          <div class="card-content">
+            <h3 class="card-title">Torii Gate & Kasuga Lanterns</h3>
+            <p class="card-desc">
+              Deep vermilion shrine gateway flanked by hexagonal granite Kasuga Tōrō lanterns emitting warm 1800K candle radiance.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Fullscreen 4K Render Modal -->
+  <div id="render-modal" class="interactive">
+    <div class="modal-frame">
+      <div class="modal-close" id="modal-close-btn">&times; CLOSE</div>
+      <img src="samurai_temple_render.png" alt="Full 4K Render">
+    </div>
+    <div class="modal-caption">BLENDER 5.2.2 LTS 4K RENDER — THE SAMURAI SANCTUARY</div>
+  </div>
+
+  <!-- Audio Synthesis Script (Web Audio API) -->
+  <script>
+    let audioCtx = null;
+    let soundEnabled = true;
+
+    function getAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      return audioCtx;
+    }
+
+    // Synthesize Katana Swish / Blade Unsheathe sound
+    function playKatanaSound() {
+      if (!soundEnabled) return;
+      try {
+        const ctx = getAudioContext();
+        if (ctx.state === 'suspended') ctx.resume();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
+
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(800, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(140, ctx.currentTime + 0.18);
+
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(1800, ctx.currentTime);
+        filter.Q.setValueAtTime(5, ctx.currentTime);
+
+        gain.gain.setValueAtTime(0.18, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start();
+        osc.stop(ctx.currentTime + 0.22);
+      } catch (e) {}
+    }
+
+    // Synthesize Deep Temple Gong (Bonsho Bell)
+    function playTempleBell() {
+      if (!soundEnabled) return;
+      try {
+        const ctx = getAudioContext();
+        if (ctx.state === 'suspended') ctx.resume();
+        
+        [110, 220, 330, 440].forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, ctx.currentTime);
+          
+          const dur = 2.5 + (idx * 0.4);
+          gain.gain.setValueAtTime(0.25 / (idx + 1), ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + dur);
+        });
+      } catch (e) {}
+    }
+
+    document.querySelectorAll('button, nav a, .gallery-card').forEach(el => {
+      el.addEventListener('mouseenter', () => playKatanaSound());
+      el.addEventListener('click', () => playTempleBell());
+    });
+
+    const audioToggle = document.getElementById('btn-audio-toggle');
+    const audioLabel = document.getElementById('audio-label');
+    audioToggle.addEventListener('click', () => {
+      soundEnabled = !soundEnabled;
+      audioLabel.textContent = soundEnabled ? 'Sound FX (ON)' : 'Sound FX (OFF)';
+      audioToggle.style.opacity = soundEnabled ? '1.0' : '0.5';
+    });
+  </script>
+
+  <!-- Interactive Three.js 3D Japanese Temple Scene Script -->
+  <script>
+    const container = document.getElementById('webgl-container');
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x0a0d18, 0.022);
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 3.2, 22);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // 4K sharpness
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.35;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    container.appendChild(renderer.domElement);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.maxPolarAngle = Math.PI / 2 - 0.05; // Prevent camera going below ground
+    controls.minDistance = 6;
+    controls.maxDistance = 45;
+    controls.target.set(0, 4.5, 0);
+
+    // --- LIGHTING ---
+    const ambientLight = new THREE.AmbientLight(0x24334a, 1.2);
+    scene.add(ambientLight);
+
+    // Warm Sunset Key Sun
+    const sunLight = new THREE.DirectionalLight(0xffa756, 3.2);
+    sunLight.position.set(-16, 22, 14);
+    sunLight.castShadow = true;
+    sunLight.shadow.mapSize.width = 2048;
+    sunLight.shadow.mapSize.height = 2048;
+    sunLight.shadow.camera.near = 0.5;
+    sunLight.shadow.camera.far = 70;
+    sunLight.shadow.camera.left = -20;
+    sunLight.shadow.camera.right = 20;
+    sunLight.shadow.camera.top = 20;
+    sunLight.shadow.camera.bottom = -20;
+    sunLight.shadow.bias = -0.0005;
+    scene.add(sunLight);
+
+    // Deep Indigo Rim Light
+    const rimLight = new THREE.DirectionalLight(0x4a6fa5, 1.8);
+    rimLight.position.set(16, 15, -14);
+    scene.add(rimLight);
+
+    // Warm Interior Hall Glow
+    const interiorGlow = new THREE.PointLight(0xffa726, 4.5, 25);
+    interiorGlow.position.set(0, 4.5, 0);
+    scene.add(interiorGlow);
+
+    // --- MATERIALS ---
+    const stoneMat = new THREE.MeshStandardMaterial({ color: 0x3a3f47, roughness: 0.9, metalness: 0.1 });
+    const woodDarkMat = new THREE.MeshStandardMaterial({ color: 0x1e1510, roughness: 0.8 });
+    const woodLightMat = new THREE.MeshStandardMaterial({ color: 0x6e4a2c, roughness: 0.65 });
+    const vermilionMat = new THREE.MeshStandardMaterial({ color: 0xcc2a1f, roughness: 0.45 });
+    const roofMat = new THREE.MeshStandardMaterial({ color: 0x141822, roughness: 0.35, metalness: 0.2 });
+    const goldMat = new THREE.MeshStandardMaterial({ color: 0xe6b800, roughness: 0.2, metalness: 0.9 });
+    const shojiMat = new THREE.MeshStandardMaterial({
+      color: 0xfffae0,
+      emissive: 0xffa726,
+      emissiveIntensity: 0.8,
+      roughness: 0.95
+    });
+    const flameMat = new THREE.MeshBasicMaterial({ color: 0xffb300 });
+
+    // --- PROCEDURAL 3D TEMPLE CONSTRUCTION ---
+    const templeGroup = new THREE.Group();
+    scene.add(templeGroup);
+
+    // 1. Foundation & Veranda
+    const groundGeo = new THREE.PlaneGeometry(80, 80);
+    const groundMesh = new THREE.Mesh(groundGeo, stoneMat);
+    groundMesh.rotation.x = -Math.PI / 2;
+    groundMesh.receiveShadow = true;
+    templeGroup.add(groundMesh);
+
+    const base1 = new THREE.Mesh(new THREE.BoxGeometry(16, 0.8, 14), stoneMat);
+    base1.position.y = 0.4;
+    base1.castShadow = true;
+    base1.receiveShadow = true;
+    templeGroup.add(base1);
+
+    const engawa = new THREE.Mesh(new THREE.BoxGeometry(14, 0.25, 12), woodLightMat);
+    engawa.position.y = 0.925;
+    engawa.castShadow = true;
+    engawa.receiveShadow = true;
+    templeGroup.add(engawa);
+
+    // Stone Steps
+    for(let i = 0; i < 4; i++) {
+      const step = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.2, 0.6), stoneMat);
+      step.position.set(0, 0.1 + (3 - i) * 0.2, 6.4 + (i * 0.5));
+      step.castShadow = true;
+      step.receiveShadow = true;
+      templeGroup.add(step);
+    }
+
+    // 2. Pillars & Beams
+    const pillarPositions = [
+      [-4.8, -3.8], [-2.4, -3.8], [0, -3.8], [2.4, -3.8], [4.8, -3.8],
+      [-4.8, 3.8], [-2.4, 3.8], [0, 3.8], [2.4, 3.8], [4.8, 3.8],
+      [-4.8, -1.9], [-4.8, 1.9], [4.8, -1.9], [4.8, 1.9]
+    ];
+
+    pillarPositions.forEach(pos => {
+      const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 3.2, 16), vermilionMat);
+      pillar.position.set(pos[0], 2.65, pos[1]);
+      pillar.castShadow = true;
+      templeGroup.add(pillar);
+
+      const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.35, 0.15, 12), stoneMat);
+      collar.position.set(pos[0], 1.12, pos[1]);
+      templeGroup.add(collar);
+    });
+
+    // Horizontal Framework Beams
+    [-3.8, 3.8].forEach(bz => {
+      const beam = new THREE.Mesh(new THREE.BoxGeometry(10.8, 0.35, 0.35), woodDarkMat);
+      beam.position.set(0, 4.25, bz);
+      beam.castShadow = true;
+      templeGroup.add(beam);
+
+      [-5.45, 5.45].forEach(cx => {
+        const cap = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.42, 0.42), goldMat);
+        cap.position.set(cx, 4.25, bz);
+        templeGroup.add(cap);
+      });
+    });
+
+    // 3. Main Hall & Shoji Lattice
+    const core = new THREE.Mesh(new THREE.BoxGeometry(9.6, 3.0, 7.6), woodDarkMat);
+    core.position.set(0, 2.55, 0);
+    core.castShadow = true;
+    templeGroup.add(core);
+
+    // Front Shoji Screens
+    [-2.8, -0.9, 0.9, 2.8].forEach(sx => {
+      const shoji = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 2.5), shojiMat);
+      shoji.position.set(sx, 2.5, 3.82);
+      templeGroup.add(shoji);
+    });
+
+    // 4. Sweeping Traditional Roof Builder (Flared Sori Curves)
+    function createRoofMesh(width, depth, height) {
+      const geo = new THREE.BufferGeometry();
+      const gw = 7, gd = 7;
+      const vertices = [];
+      const indices = [];
+
+      for(let j = 0; j < gd; j++) {
+        const z = ((j / (gd - 1)) - 0.5) * depth;
+        const nz = Math.abs(z) / (depth * 0.5);
+        for(let i = 0; i < gw; i++) {
+          const x = ((i / (gw - 1)) - 0.5) * width;
+          const nx = Math.abs(x) / (width * 0.5);
+
+          const r = Math.sqrt(Math.pow(nx * 0.7, 2) + Math.pow(nz * 0.7, 2));
+          let y = (1.0 - Math.pow(r, 1.4)) * height;
+          if (nx > 0.6 || nz > 0.6) {
+            y += Math.pow(nx * nz, 2) * (height * 0.5);
+          }
+          vertices.push(x, y, z);
+        }
+      }
+
+      for(let j = 0; j < gd - 1; j++) {
+        for(let i = 0; i < gw - 1; i++) {
+          const a = j * gw + i;
+          const b = j * gw + (i + 1);
+          const c = (j + 1) * gw + (i + 1);
+          const d = (j + 1) * gw + i;
+          indices.push(a, b, d);
+          indices.push(b, c, d);
+        }
+      }
+
+      geo.setIndex(indices);
+      geo.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+      geo.computeVertexNormals();
+
+      const mesh = new THREE.Mesh(geo, roofMat);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      return mesh;
+    }
+
+    // Lower Roof Tier
+    const roof1 = createRoofMesh(16.5, 14.5, 1.4);
+    roof1.position.set(0, 4.4, 0);
+    templeGroup.add(roof1);
+
+    // Upper Pavilion
+    const upperCore = new THREE.Mesh(new THREE.BoxGeometry(7.2, 1.8, 5.8), woodDarkMat);
+    upperCore.position.set(0, 5.9, 0);
+    upperCore.castShadow = true;
+    templeGroup.add(upperCore);
+
+    // Grand Upper Roof Tier (Irimoya)
+    const roof2 = createRoofMesh(12.5, 10.5, 2.0);
+    roof2.position.set(0, 6.8, 0);
+    templeGroup.add(roof2);
+
+    // Ridge Beam & Gold Finials
+    const ridge = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 9.8, 12), goldMat);
+    ridge.rotation.x = Math.PI / 2;
+    ridge.position.set(0, 8.8, 0);
+    templeGroup.add(ridge);
+
+    // 5. Grand Torii Gate (Sacred Entrance)
+    const toriiZ = 12.5;
+    const toriiGroup = new THREE.Group();
+    templeGroup.add(toriiGroup);
+
+    [-2.8, 2.8].forEach(tx => {
+      const col = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.32, 5.4, 16), vermilionMat);
+      col.position.set(tx, 2.7, toriiZ);
+      col.rotation.z = tx > 0 ? 0.04 : -0.04;
+      col.castShadow = true;
+      toriiGroup.add(col);
+
+      const b = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.45, 0.4, 12), stoneMat);
+      b.position.set(tx, 0.2, toriiZ);
+      toriiGroup.add(b);
+    });
+
+    const kasagi = new THREE.Mesh(new THREE.BoxGeometry(7.6, 0.55, 0.48), vermilionMat);
+    kasagi.position.set(0, 5.5, toriiZ);
+    kasagi.castShadow = true;
+    toriiGroup.add(kasagi);
+
+    const topPlate = new THREE.Mesh(new THREE.BoxGeometry(7.9, 0.12, 0.6), woodDarkMat);
+    topPlate.position.set(0, 5.82, toriiZ);
+    toriiGroup.add(topPlate);
+
+    const nuki = new THREE.Mesh(new THREE.BoxGeometry(6.6, 0.35, 0.32), vermilionMat);
+    nuki.position.set(0, 4.6, toriiZ);
+    nuki.castShadow = true;
+    toriiGroup.add(nuki);
+
+    const tablet = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.7, 0.18), goldMat);
+    tablet.position.set(0, 5.05, toriiZ);
+    toriiGroup.add(tablet);
+
+    // 6. Kasuga Stone Lanterns (Toro) with Real Flame Lights
+    const lanternPositions = [
+      [-3.2, 10.5], [3.2, 10.5],
+      [-4.2, 6.8], [4.2, 6.8],
+      [-5.2, 3.0], [5.2, 3.0]
+    ];
+
+    const lanternLights = [];
+
+    lanternPositions.forEach(lp => {
+      const tGroup = new THREE.Group();
+      tGroup.position.set(lp[0], 0, lp[1]);
+      templeGroup.add(tGroup);
+
+      const base = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.5, 0.25, 6), stoneMat);
+      base.position.y = 0.125;
+      tGroup.add(base);
+
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.2, 1.1, 8), stoneMat);
+      post.position.y = 0.8;
+      tGroup.add(post);
+
+      const mid = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.45, 0.2, 6), stoneMat);
+      mid.position.y = 1.45;
+      tGroup.add(mid);
+
+      const flame = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 8), flameMat);
+      flame.position.y = 1.75;
+      tGroup.add(flame);
+
+      const kasa = new THREE.Mesh(new THREE.ConeGeometry(0.65, 0.38, 6), stoneMat);
+      kasa.position.y = 2.05;
+      tGroup.add(kasa);
+
+      const finial = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 8), goldMat);
+      finial.position.y = 2.32;
+      tGroup.add(finial);
+
+      const pLight = new THREE.PointLight(0xff9911, 1.6, 8);
+      pLight.position.set(lp[0], 1.75, lp[1]);
+      scene.add(pLight);
+      lanternLights.push(pLight);
+    });
+
+    // 7. Sakura Cherry Blossom Petal Particle System
+    const petalCount = 800;
+    const petalGeo = new THREE.BufferGeometry();
+    const petalPositions = new Float32Array(petalCount * 3);
+    const petalVelocities = [];
+
+    for(let i = 0; i < petalCount; i++) {
+      petalPositions[i * 3] = (Math.random() - 0.5) * 35;
+      petalPositions[i * 3 + 1] = Math.random() * 20;
+      petalPositions[i * 3 + 2] = (Math.random() - 0.5) * 35;
+
+      petalVelocities.push({
+        x: (Math.random() - 0.5) * 0.04 + 0.02,
+        y: -0.02 - Math.random() * 0.03,
+        z: (Math.random() - 0.5) * 0.04,
+        rot: Math.random() * 0.05
+      });
+    }
+
+    petalGeo.setAttribute('position', new THREE.BufferAttribute(petalPositions, 3));
+
+    const petalMat = new THREE.PointsMaterial({
+      color: 0xffb7c5,
+      size: 0.25,
+      transparent: true,
+      opacity: 0.85,
+      blending: THREE.AdditiveBlending
+    });
+
+    const petalParticles = new THREE.Points(petalGeo, petalMat);
+    scene.add(petalParticles);
+
+    // --- ANIMATION LOOP ---
+    let clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const delta = clock.getDelta();
+      const time = clock.getElapsedTime();
+
+      // Flicker Lantern Flames
+      lanternLights.forEach((light, i) => {
+        light.intensity = 1.3 + Math.sin(time * 8 + i * 2.5) * 0.3 + (Math.random() - 0.5) * 0.15;
+      });
+
+      // Update Petal Positions
+      const positions = petalParticles.geometry.attributes.position.array;
+      for(let i = 0; i < petalCount; i++) {
+        positions[i * 3] += petalVelocities[i].x + Math.sin(time + i) * 0.01;
+        positions[i * 3 + 1] += petalVelocities[i].y;
+        positions[i * 3 + 2] += petalVelocities[i].z;
+
+        if (positions[i * 3 + 1] < 0) {
+          positions[i * 3 + 1] = 18;
+          positions[i * 3] = (Math.random() - 0.5) * 35;
+          positions[i * 3 + 2] = (Math.random() - 0.5) * 35;
+        }
+      }
+      petalParticles.geometry.attributes.position.needsUpdate = true;
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // --- CAMERA PRESETS & TOURS ---
+    function setCameraPreset(preset) {
+      if (preset === 'entrance') {
+        gsapToCamera(0, 2.2, 19, 0, 4.0, 0);
+      } else if (preset === 'veranda') {
+        gsapToCamera(-4.5, 3.2, 8.5, 0, 3.5, 0);
+      } else if (preset === 'aerial') {
+        gsapToCamera(15, 14, 18, 0, 4.5, 0);
+      } else if (preset === 'orbit') {
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 1.2;
+        return;
+      }
+      controls.autoRotate = false;
+    }
+
+    function gsapToCamera(px, py, pz, tx, ty, tz) {
+      const startTime = performance.now();
+      const dur = 1200;
+      const startPos = camera.position.clone();
+      const startTarget = controls.target.clone();
+      const endPos = new THREE.Vector3(px, py, pz);
+      const endTarget = new THREE.Vector3(tx, ty, tz);
+
+      function step(now) {
+        const progress = Math.min((now - startTime) / dur, 1.0);
+        const ease = 0.5 - Math.cos(progress * Math.PI) / 2;
+        camera.position.lerpVectors(startPos, endPos, ease);
+        controls.target.lerpVectors(startTarget, endTarget, ease);
+        if (progress < 1.0) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        setCameraPreset(btn.dataset.preset);
+      });
+    });
+
+    document.getElementById('btn-tour').addEventListener('click', () => {
+      setCameraPreset('entrance');
+      setTimeout(() => setCameraPreset('veranda'), 3500);
+      setTimeout(() => setCameraPreset('aerial'), 7000);
+    });
+
+    document.getElementById('btn-inspect-temple').addEventListener('click', () => {
+      setCameraPreset('veranda');
+    });
+
+    // 4K Render Lightbox Modal
+    const modal = document.getElementById('render-modal');
+    const openBtn = document.getElementById('btn-open-4k');
+    const closeBtn = document.getElementById('modal-close-btn');
+    const cardRender = document.getElementById('card-blender-render');
+
+    function openModal() { modal.classList.add('open'); }
+    function closeModal() { modal.classList.remove('open'); }
+
+    openBtn.addEventListener('click', openModal);
+    cardRender.addEventListener('click', openModal);
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+
+    // Resize Handler
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
