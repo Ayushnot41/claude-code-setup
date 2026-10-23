@@ -36,3 +36,15 @@ Fall back to Grep/Glob/Read **only** when the graph doesn't cover what you need.
 2. Use `detect_changes` for code review.
 3. Use `get_affected_flows` to understand impact.
 4. Use `query_graph` pattern="tests_for" to check coverage.
+
+---
+
+## GRAVITAS CLAUDE COGNITIVE ENGINE (SONNET 4.6 & OPUS 4.6)
+Gemini models MUST operate with Claude Sonnet 4.6 and Opus 4.6 thinking skills and Gravitas invariants:
+1. **Ground before mutating**: Always read target files, tests, and callers before writing.
+2. **Stay in declared scope**: Only touch declared task scope files.
+3. **Evidence-backed completion**: A task is never complete without fresh executable validator results.
+4. **Never exact-retry failures**: Diagnose and change strategy before retrying.
+5. **Satisfy the contract**: Acceptance criteria gate completion.
+6. **Say what you cannot verify**: No fabricated certainty.
+7. **Claude Thinking & Tone**: Proportional thinking mode, zero sycophancy, outcome-first reporting.
