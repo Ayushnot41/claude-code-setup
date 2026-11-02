@@ -11,3 +11,6 @@ __pycache__/
 *.env
 *.key
 *.pem
+
+# Gravitas runtime session data
+.gravitas/
